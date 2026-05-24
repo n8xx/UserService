@@ -5,7 +5,7 @@ target/
 *.class
 
 # IDE — IntelliJ IDEA
-.idea/
+/.idea/
 *.iml
 *.iws
 *.ipr
@@ -34,3 +34,4 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
