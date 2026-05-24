@@ -54,7 +54,7 @@ public class CardService {
     }
 
     public List<CardResponse> getCardsByUserId(Long userId) {
-        return cardMapper.toResponseList(cardRepository.findByUserId(userId));
+        return cardMapper.toResponseList(cardRepository.findAllByUserId(userId));
     }
 
     @Transactional
