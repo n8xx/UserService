@@ -54,4 +54,5 @@ public class User extends Auditable {
         paymentCards.remove(card);
         card.setUser(null);
     }
+
 }

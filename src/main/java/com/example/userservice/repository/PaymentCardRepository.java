@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
 @Repository
 public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
         JpaSpecificationExecutor<PaymentCard> {
@@ -17,10 +18,12 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
 
     List<PaymentCard> findAllByUserIdAndActiveTrue(Long userId);
 
-    boolean existsByNumber(String number);
-
-    // Native SQL
     @Query(value = "SELECT COUNT(*) FROM payment_cards WHERE user_id = :userId",
             nativeQuery = true)
+
     int countCardsByUserId(@Param("userId") Long userId);
+
+    long countByUserId(Long userId);
+
+    List<PaymentCard> findByUserId(Long userId);
 }
