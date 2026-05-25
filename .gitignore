@@ -5,7 +5,7 @@ target/
 *.class
 
 # IDE — IntelliJ IDEA
-/.idea/
+.idea/
 *.iml
 *.iws
 *.ipr
@@ -19,9 +19,9 @@ target/
 .classpath
 .settings/
 
-# Environment variables (секреты не должны попасть в git!)
+# Environment variables
 .env
-*.env
+*.envы
 application-local.yml
 
 # Logs
