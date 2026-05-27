@@ -1,9 +1,9 @@
 package com.example.userservice.mapper;
 
+import com.example.userservice.entity.PaymentCard;
 import com.example.userservice.dto.card.CardCreateRequest;
 import com.example.userservice.dto.card.CardResponse;
 import com.example.userservice.dto.card.CardUpdateRequest;
-import com.example.userservice.entity.PaymentCard;
 import org.mapstruct.*;
 
 import java.util.List;
