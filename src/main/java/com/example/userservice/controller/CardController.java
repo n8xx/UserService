@@ -6,50 +6,62 @@ import com.example.userservice.dto.card.CardUpdateRequest;
 import com.example.userservice.service.CardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/cards")
+@RequestMapping("/api/v1/users/{userId}/cards")
 @RequiredArgsConstructor
 public class CardController {
 
     private final CardService cardService;
 
     @PostMapping
-    public ResponseEntity<CardResponse> createCard(@Valid @RequestBody CardCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(request));
+    public ResponseEntity<CardResponse> createCard(
+            @PathVariable Long userId,
+            @Valid @RequestBody CardCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(userId, request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<CardResponse> getCardById(@PathVariable Long id) {
-        return ResponseEntity.ok(cardService.getCardById(id));
+    @GetMapping
+    public ResponseEntity<Page<CardResponse>> getCardsByUserId(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String holder,
+            Pageable pageable) {
+        return ResponseEntity.ok(cardService.getCardsByUserId(userId, holder, pageable));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<CardResponse>> getCardsByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(cardService.getCardsByUserId(userId));
+    @GetMapping("/{cardId}")
+    public ResponseEntity<CardResponse> getCardById(
+            @PathVariable Long userId,
+            @PathVariable Long cardId) {
+        return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{cardId}")
     public ResponseEntity<CardResponse> updateCard(
-            @PathVariable Long id,
+            @PathVariable Long userId,
+            @PathVariable Long cardId,
             @Valid @RequestBody CardUpdateRequest request) {
-        return ResponseEntity.ok(cardService.updateCard(id, request));
+        return ResponseEntity.ok(cardService.updateCard(userId, cardId, request));
     }
 
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivateCard(@PathVariable Long id) {
-        cardService.deactivateCard(id);
+    @PatchMapping("/{cardId}/deactivate")
+    public ResponseEntity<Void> deactivateCard(
+            @PathVariable Long userId,
+            @PathVariable Long cardId) {
+        cardService.deactivateCard(userId, cardId);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<Void> activateCard(@PathVariable Long id) {
-        cardService.activateCard(id);
+    @PatchMapping("/{cardId}/activate")
+    public ResponseEntity<Void> activateCard(
+            @PathVariable Long userId,
+            @PathVariable Long cardId) {
+        cardService.activateCard(userId, cardId);
         return ResponseEntity.noContent().build();
     }
 }

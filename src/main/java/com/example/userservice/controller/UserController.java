@@ -30,9 +30,14 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable) {
-        return ResponseEntity.ok(userService.getAllUsers(pageable));
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String surname,
+            Pageable pageable) {
+        return ResponseEntity.ok(userService.getAllUsers(name, surname, pageable));
     }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
