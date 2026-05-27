@@ -14,6 +14,7 @@ import com.example.userservice.repository.PaymentCardRepository;
 import com.example.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,6 +34,7 @@ public class CardService {
     private final CardMapper cardMapper;
 
     @Transactional
+    @CacheEvict(value = "users", key = "#userId")
     public CardResponse createCard(Long userId, CardCreateRequest request) {
         log.info("Creating card for user: {}", userId);
 
@@ -67,6 +69,7 @@ public class CardService {
         return cardRepository.findAll(spec, pageable).map(cardMapper::toResponse);
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     @Transactional
     public CardResponse updateCard(Long userId, Long id, CardUpdateRequest request) {
         log.info("Updating card with id: {}", id);
@@ -75,6 +78,7 @@ public class CardService {
         return cardMapper.toResponse(cardRepository.save(card));
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     @Transactional
     public void deactivateCard(Long userId, Long id) {
         log.info("Deactivating card with id: {}", id);
@@ -83,6 +87,7 @@ public class CardService {
         cardRepository.save(card);
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     @Transactional
     public void activateCard(Long userId, Long id) {
         log.info("Activating card with id: {}", id);
