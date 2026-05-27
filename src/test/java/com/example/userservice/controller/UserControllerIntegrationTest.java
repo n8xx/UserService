@@ -138,6 +138,58 @@ class UserControllerIntegrationTest {
     }
 
     @Test
+    void getAllUsers_filterByName_returnsMatchingUsers() throws Exception {
+        UserCreateRequest anna = new UserCreateRequest(
+                "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "filter.anna@example.com");
+        UserCreateRequest boris = new UserCreateRequest(
+                "Boris", "Ivanov", LocalDate.of(1990, 3, 10), "filter.boris@example.com");
+
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(anna)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boris)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/users").param("name", "Anna"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].name").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.containsStringIgnoringCase("Anna"))))
+                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.boris@example.com"))));
+    }
+
+    @Test
+    void getAllUsers_filterBySurname_returnsMatchingUsers() throws Exception {
+        UserCreateRequest carla = new UserCreateRequest(
+                "Carla", "Smith", LocalDate.of(1992, 7, 20), "filter.carla@example.com");
+        UserCreateRequest david = new UserCreateRequest(
+                "David", "Johnson", LocalDate.of(1988, 1, 5), "filter.david@example.com");
+
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(carla)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(david)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/users").param("surname", "Smith"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].surname").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.containsStringIgnoringCase("Smith"))))
+                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.david@example.com"))));
+    }
+
+    @Test
+    void getAllUsers_noFilters_returnsPaginatedResults() throws Exception {
+        mockMvc.perform(get("/api/v1/users").param("size", "5").param("page", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
     void deactivateUser_success() throws Exception {
         UserCreateRequest createRequest = new UserCreateRequest(
                 "Anna",
