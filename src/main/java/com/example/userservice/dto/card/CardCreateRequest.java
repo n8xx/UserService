@@ -25,7 +25,4 @@ public class CardCreateRequest {
     @NotNull(message = "Expiry date is required")
     @Future(message = "Card must not be expired")
     private LocalDate expirationDate;
-
-    @NotNull(message = "User ID is required")
-    private Long userId;
 }
