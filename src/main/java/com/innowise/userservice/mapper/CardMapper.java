@@ -6,7 +6,6 @@ import com.innowise.userservice.dto.card.CardResponse;
 import com.innowise.userservice.dto.card.CardUpdateRequest;
 import org.mapstruct.*;
 
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface CardMapper {
@@ -16,7 +15,6 @@ public interface CardMapper {
     @Mapping(target = "holder", source = "holder")
     CardResponse toResponse(PaymentCard card);
 
-    List<CardResponse> toResponseList(List<PaymentCard> cards);
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "id", ignore = true)
