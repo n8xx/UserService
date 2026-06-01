@@ -12,8 +12,8 @@ import java.util.List;
 public interface CardMapper {
 
     @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "maskedNumber", expression = "java(maskCardNumber(card.getNumber()))")
-    @Mapping(target = "holder", source = "card.holder")  // добавь это
+    @Mapping(target = "maskedNumber", source = "number", qualifiedByName = "maskNumber")
+    @Mapping(target = "holder", source = "holder")
     CardResponse toResponse(PaymentCard card);
 
     List<CardResponse> toResponseList(List<PaymentCard> cards);
@@ -31,7 +31,8 @@ public interface CardMapper {
     @Mapping(target = "active", ignore = true)
     void updateEntity(CardUpdateRequest request, @MappingTarget PaymentCard card);
 
-    default String maskCardNumber(String number) {
+    @Named("maskNumber")
+    default String maskNumber(String number) {
         if (number == null || number.length() < 4) return "****";
         return "**** **** **** " + number.substring(number.length() - 4);
     }
