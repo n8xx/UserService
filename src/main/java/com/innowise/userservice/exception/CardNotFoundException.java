@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.innowise.userservice.exception;
 
 
 

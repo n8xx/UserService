@@ -1,6 +1,6 @@
-package com.example.userservice.repository;
+package com.innowise.userservice.repository;
 
-import com.example.userservice.entity.PaymentCard;
+import com.innowise.userservice.entity.PaymentCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

@@ -1,14 +1,14 @@
-package com.example.userservice.service;
+package com.innowise.userservice.service;
 
-import com.example.userservice.dto.user.UserCreateRequest;
-import com.example.userservice.dto.user.UserResponse;
-import com.example.userservice.dto.user.UserUpdateRequest;
-import com.example.userservice.entity.User;
-import com.example.userservice.exception.BusinessException;
-import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.mapper.UserMapper;
-import com.example.userservice.repository.UserRepository;
-import com.example.userservice.repository.specification.UserSpecification;
+import com.innowise.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.entity.User;
+import com.innowise.userservice.exception.BusinessException;
+import com.innowise.userservice.exception.UserNotFoundException;
+import com.innowise.userservice.mapper.UserMapper;
+import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.repository.specification.UserSpecification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,9 +1,9 @@
-package com.example.userservice.controller;
+package com.innowise.userservice.controller;
 
-import com.example.userservice.dto.user.UserCreateRequest;
-import com.example.userservice.dto.user.UserResponse;
-import com.example.userservice.dto.user.UserUpdateRequest;
-import com.example.userservice.service.UserService;
+import com.innowise.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

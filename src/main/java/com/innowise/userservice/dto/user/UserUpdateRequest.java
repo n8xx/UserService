@@ -1,4 +1,4 @@
-package com.example.userservice.dto.user;
+package com.innowise.userservice.dto.user;
 
 
 import jakarta.validation.constraints.Past;

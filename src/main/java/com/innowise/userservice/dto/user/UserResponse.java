@@ -1,6 +1,6 @@
-package com.example.userservice.dto.user;
+package com.innowise.userservice.dto.user;
 
-import com.example.userservice.dto.card.CardResponse;
+import com.innowise.userservice.dto.card.CardResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

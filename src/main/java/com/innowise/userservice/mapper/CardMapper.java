@@ -1,9 +1,9 @@
-package com.example.userservice.mapper;
+package com.innowise.userservice.mapper;
 
-import com.example.userservice.entity.PaymentCard;
-import com.example.userservice.dto.card.CardCreateRequest;
-import com.example.userservice.dto.card.CardResponse;
-import com.example.userservice.dto.card.CardUpdateRequest;
+import com.innowise.userservice.entity.PaymentCard;
+import com.innowise.userservice.dto.card.CardCreateRequest;
+import com.innowise.userservice.dto.card.CardResponse;
+import com.innowise.userservice.dto.card.CardUpdateRequest;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -13,6 +13,7 @@ public interface CardMapper {
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "maskedNumber", expression = "java(maskCardNumber(card.getNumber()))")
+    @Mapping(target = "holder", source = "card.holder")  // добавь это
     CardResponse toResponse(PaymentCard card);
 
     List<CardResponse> toResponseList(List<PaymentCard> cards);

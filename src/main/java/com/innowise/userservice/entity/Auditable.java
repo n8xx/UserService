@@ -1,4 +1,4 @@
-package com.example.userservice.entity;
+package com.innowise.userservice.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

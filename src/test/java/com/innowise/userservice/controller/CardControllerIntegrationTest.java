@@ -1,9 +1,9 @@
-package com.example.userservice.controller;
+package com.innowise.userservice.controller;
 
-import com.example.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.userservice.dto.card.CardCreateRequest;
-import com.example.userservice.dto.card.CardUpdateRequest;
+import com.innowise.userservice.dto.card.CardCreateRequest;
+import com.innowise.userservice.dto.card.CardUpdateRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -72,7 +72,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void createCard_success() throws Exception {
-        Long userId = createUser("card.create@example.com");
+        Long userId = createUser("card.create@innowise.com");
 
         CardCreateRequest request = new CardCreateRequest(
                 "1111222233334444", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
@@ -88,7 +88,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void createCard_maxCards_returnsUnprocessableEntity() throws Exception {
-        Long userId = createUser("card.maxcards@example.com");
+        Long userId = createUser("card.maxcards@innowise.com");
         String[] numbers = {
             "1000000000000001", "1000000000000002", "1000000000000003",
             "1000000000000004", "1000000000000005"
@@ -108,7 +108,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void createCard_inactiveUser_returnsUnprocessableEntity() throws Exception {
-        Long userId = createUser("card.inactive@example.com");
+        Long userId = createUser("card.inactive@innowise.com");
         mockMvc.perform(patch("/api/v1/users/" + userId + "/deactivate"))
                 .andExpect(status().isNoContent());
 
@@ -123,7 +123,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void getCardsByUserId_returnsPaginatedResults() throws Exception {
-        Long userId = createUser("card.list@example.com");
+        Long userId = createUser("card.list@innowise.com");
         createCard(userId, "3333444455556661");
         createCard(userId, "3333444455556662");
 
@@ -136,7 +136,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void getCardsByUserId_filterByHolder_returnsMatchingCards() throws Exception {
-        Long userId = createUser("card.holder.filter@example.com");
+        Long userId = createUser("card.holder.filter@innowise.com");
 
         CardCreateRequest req1 = new CardCreateRequest(
                 "4444555566667771", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
@@ -160,7 +160,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void getCardById_success() throws Exception {
-        Long userId = createUser("card.getbyid@example.com");
+        Long userId = createUser("card.getbyid@innowise.com");
         Long cardId = createCard(userId, "5555666677778881");
 
         mockMvc.perform(get("/api/v1/users/" + userId + "/cards/" + cardId))
@@ -170,7 +170,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void getCardById_notFound_returns404() throws Exception {
-        Long userId = createUser("card.notfound@example.com");
+        Long userId = createUser("card.notfound@innowise.com");
 
         mockMvc.perform(get("/api/v1/users/" + userId + "/cards/999999"))
                 .andExpect(status().isNotFound());
@@ -178,7 +178,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void updateCard_success() throws Exception {
-        Long userId = createUser("card.update@example.com");
+        Long userId = createUser("card.update@innowise.com");
         Long cardId = createCard(userId, "6666777788889991");
 
         CardUpdateRequest updateRequest = new CardUpdateRequest("UPDATED HOLDER", null);
@@ -192,7 +192,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void deactivateCard_success() throws Exception {
-        Long userId = createUser("card.deactivate@example.com");
+        Long userId = createUser("card.deactivate@innowise.com");
         Long cardId = createCard(userId, "7777888899990001");
 
         mockMvc.perform(patch("/api/v1/users/" + userId + "/cards/" + cardId + "/deactivate"))
@@ -205,7 +205,7 @@ class CardControllerIntegrationTest {
 
     @Test
     void activateCard_success() throws Exception {
-        Long userId = createUser("card.activate@example.com");
+        Long userId = createUser("card.activate@innowise.com");
         Long cardId = createCard(userId, "8888999900001111");
 
         mockMvc.perform(patch("/api/v1/users/" + userId + "/cards/" + cardId + "/deactivate"))

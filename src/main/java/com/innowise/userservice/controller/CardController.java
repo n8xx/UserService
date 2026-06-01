@@ -1,9 +1,9 @@
-package com.example.userservice.controller;
+package com.innowise.userservice.controller;
 
-import com.example.userservice.dto.card.CardCreateRequest;
-import com.example.userservice.dto.card.CardResponse;
-import com.example.userservice.dto.card.CardUpdateRequest;
-import com.example.userservice.service.CardService;
+import com.innowise.userservice.dto.card.CardCreateRequest;
+import com.innowise.userservice.dto.card.CardResponse;
+import com.innowise.userservice.dto.card.CardUpdateRequest;
+import com.innowise.userservice.service.CardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,13 +1,13 @@
-package com.example.userservice.service;
+package com.innowise.userservice.service;
 
-import com.example.userservice.dto.user.UserCreateRequest;
-import com.example.userservice.dto.user.UserUpdateRequest;
-import com.example.userservice.exception.BusinessException;
-import com.example.userservice.exception.UserNotFoundException;
-import com.example.userservice.dto.user.UserResponse;
-import com.example.userservice.entity.User;
-import com.example.userservice.mapper.UserMapper;
-import com.example.userservice.repository.UserRepository;
+import com.innowise.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.exception.BusinessException;
+import com.innowise.userservice.exception.UserNotFoundException;
+import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.entity.User;
+import com.innowise.userservice.mapper.UserMapper;
+import com.innowise.userservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +52,7 @@ UserServiceTest {
                 .id(1L)
                 .name("Anna")
                 .surname("Ivanova")
-                .email("anna@example.com")
+                .email("anna@innowise.com")
                 .birthDate(LocalDate.of(1995, 5, 15))
                 .active(true)
                 .build();
@@ -61,7 +61,7 @@ UserServiceTest {
                 .id(1L)
                 .name("Anna")
                 .surname("Ivanova")
-                .email("anna@example.com")
+                .email("anna@innowise.com")
                 .active(true)
                 .build();
 
@@ -69,7 +69,7 @@ UserServiceTest {
                 "Anna",
                 "Ivanova",
                 LocalDate.of(1995, 5, 15),
-                "anna@example.com"
+                "anna@innowise.com"
         );
     }
 
@@ -83,7 +83,7 @@ UserServiceTest {
         UserResponse result = userService.createUser(createRequest);
 
         assertThat(result).isNotNull();
-        assertThat(result.getEmail()).isEqualTo("anna@example.com");
+        assertThat(result.getEmail()).isEqualTo("anna@innowise.com");
         verify(userRepository).save(user);
     }
 

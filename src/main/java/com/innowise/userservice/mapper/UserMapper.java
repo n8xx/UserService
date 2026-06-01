@@ -1,9 +1,9 @@
-package com.example.userservice.mapper;
+package com.innowise.userservice.mapper;
 
-import com.example.userservice.dto.user.UserCreateRequest;
-import com.example.userservice.dto.user.UserResponse;
-import com.example.userservice.dto.user.UserUpdateRequest;
-import com.example.userservice.entity.User;
+import com.innowise.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.entity.User;
 import org.mapstruct.*;
 
 import java.util.List;

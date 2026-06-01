@@ -1,7 +1,7 @@
-package com.example.userservice.controller;
+package com.innowise.userservice.controller;
 
-import com.example.userservice.dto.user.UserCreateRequest;
-import com.example.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.dto.user.UserCreateRequest;
+import com.innowise.userservice.dto.user.UserUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ class UserControllerIntegrationTest {
                 "Anna",
                 "Ivanova",
                 LocalDate.of(1995, 5, 15),
-                "anna.integration@example.com"
+                "anna.integration@innowise.com"
         );
 
         mockMvc.perform(post("/api/v1/users")
@@ -64,7 +64,7 @@ class UserControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Anna"))
-                .andExpect(jsonPath("$.email").value("anna.integration@example.com"))
+                .andExpect(jsonPath("$.email").value("anna.integration@innowise.com"))
                 .andExpect(jsonPath("$.active").value(true));
     }
 
@@ -97,7 +97,7 @@ class UserControllerIntegrationTest {
                 "Anna",
                 "Ivanova",
                 LocalDate.of(1995, 5, 15),
-                "duplicate@example.com"
+                "duplicate@innowise.com"
         );
 
         mockMvc.perform(post("/api/v1/users")
@@ -117,7 +117,7 @@ class UserControllerIntegrationTest {
                 "Anna",
                 "Ivanova",
                 LocalDate.of(1995, 5, 15),
-                "update.test@example.com"
+                "update.test@innowise.com"
         );
 
         String response = mockMvc.perform(post("/api/v1/users")
@@ -140,9 +140,9 @@ class UserControllerIntegrationTest {
     @Test
     void getAllUsers_filterByName_returnsMatchingUsers() throws Exception {
         UserCreateRequest anna = new UserCreateRequest(
-                "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "filter.anna@example.com");
+                "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "filter.anna@innowise.com");
         UserCreateRequest boris = new UserCreateRequest(
-                "Boris", "Ivanov", LocalDate.of(1990, 3, 10), "filter.boris@example.com");
+                "Boris", "Ivanov", LocalDate.of(1990, 3, 10), "filter.boris@innowise.com");
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -156,15 +156,15 @@ class UserControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/users").param("name", "Anna"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[*].name").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.containsStringIgnoringCase("Anna"))))
-                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.boris@example.com"))));
+                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.boris@innowise.com"))));
     }
 
     @Test
     void getAllUsers_filterBySurname_returnsMatchingUsers() throws Exception {
         UserCreateRequest carla = new UserCreateRequest(
-                "Carla", "Smith", LocalDate.of(1992, 7, 20), "filter.carla@example.com");
+                "Carla", "Smith", LocalDate.of(1992, 7, 20), "filter.carla@innowise.com");
         UserCreateRequest david = new UserCreateRequest(
-                "David", "Johnson", LocalDate.of(1988, 1, 5), "filter.david@example.com");
+                "David", "Johnson", LocalDate.of(1988, 1, 5), "filter.david@innowise.com");
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -178,7 +178,7 @@ class UserControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/users").param("surname", "Smith"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[*].surname").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.containsStringIgnoringCase("Smith"))))
-                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.david@example.com"))));
+                .andExpect(jsonPath("$.content[*].email").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("filter.david@innowise.com"))));
     }
 
     @Test
@@ -195,7 +195,7 @@ class UserControllerIntegrationTest {
                 "Anna",
                 "Ivanova",
                 LocalDate.of(1995, 5, 15),
-                "deactivate.test@example.com"
+                "deactivate.test@innowise.com"
         );
 
         String response = mockMvc.perform(post("/api/v1/users")

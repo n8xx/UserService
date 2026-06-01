@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.innowise.userservice.exception;
 
 public class BusinessException extends RuntimeException {
     public BusinessException(String message) {

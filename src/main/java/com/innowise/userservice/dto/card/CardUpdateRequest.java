@@ -1,4 +1,4 @@
-package com.example.userservice.dto.card;
+package com.innowise.userservice.dto.card;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
