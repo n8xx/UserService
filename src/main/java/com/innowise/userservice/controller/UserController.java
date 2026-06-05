@@ -3,6 +3,7 @@ package com.innowise.userservice.controller;
 import com.innowise.userservice.dto.user.UserCreateRequest;
 import com.innowise.userservice.dto.user.UserResponse;
 import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.security.AuthUser;
 import com.innowise.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,11 +29,8 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(
             @PathVariable Long id,
-            @AuthenticationPrincipal Long currentUserId,
-            Authentication authentication) {
-        String role = authentication.getAuthorities().iterator().next()
-                .getAuthority().replace("ROLE_", "");
-        return ResponseEntity.ok(userService.getUserById(id,currentUserId, role));
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(userService.getUserById(id, authUser.getUserId(), authUser.getRole()));
     }
 
     @GetMapping
@@ -50,11 +47,8 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateRequest request,
-            @AuthenticationPrincipal Long currentUserId,
-            Authentication authentication) {
-        String role = authentication.getAuthorities().iterator().next()
-                .getAuthority().replace("ROLE_", "");
-        return ResponseEntity.ok(userService.updateUser(id, request, currentUserId, role));
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(userService.updateUser(id, request, authUser.getUserId(), authUser.getRole()));
     }
 
     @PatchMapping("/{id}/deactivate")
