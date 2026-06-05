@@ -10,58 +10,85 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users/{userId}/cards")
 @RequiredArgsConstructor
 public class CardController {
-
+    
+    private static final String ROLE_PREFIX = "ROLE_";
     private final CardService cardService;
 
     @PostMapping
     public ResponseEntity<CardResponse> createCard(
             @PathVariable Long userId,
-            @Valid @RequestBody CardCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(userId, request));
+            @Valid @RequestBody CardCreateRequest request,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(userId, request,currentUserId, role));
     }
 
     @GetMapping
     public ResponseEntity<Page<CardResponse>> getCardsByUserId(
             @PathVariable Long userId,
             @RequestParam(required = false) String holder,
-            Pageable pageable) {
-        return ResponseEntity.ok(cardService.getCardsByUserId(userId, holder, pageable));
+            Pageable pageable,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        return ResponseEntity.ok(cardService.getCardsByUserId(userId, holder, pageable,currentUserId, role));
     }
 
     @GetMapping("/{cardId}")
     public ResponseEntity<CardResponse> getCardById(
             @PathVariable Long userId,
-            @PathVariable Long cardId) {
-        return ResponseEntity.ok(cardService.getCardById(cardId));
+            @PathVariable Long cardId,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        return ResponseEntity.ok(cardService.getCardById(userId,cardId,currentUserId, role));
     }
 
     @PutMapping("/{cardId}")
     public ResponseEntity<CardResponse> updateCard(
             @PathVariable Long userId,
             @PathVariable Long cardId,
-            @Valid @RequestBody CardUpdateRequest request) {
-        return ResponseEntity.ok(cardService.updateCard(userId, cardId, request));
+            @Valid @RequestBody CardUpdateRequest request,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        return ResponseEntity.ok(cardService.updateCard(userId, cardId, request,currentUserId, role));
     }
 
     @PatchMapping("/{cardId}/deactivate")
     public ResponseEntity<Void> deactivateCard(
             @PathVariable Long userId,
-            @PathVariable Long cardId) {
-        cardService.deactivateCard(userId, cardId);
+            @PathVariable Long cardId,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        cardService.deactivateCard(userId, cardId,currentUserId, role);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{cardId}/activate")
     public ResponseEntity<Void> activateCard(
             @PathVariable Long userId,
-            @PathVariable Long cardId) {
-        cardService.activateCard(userId, cardId);
+            @PathVariable Long cardId,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority()
+                .replace(ROLE_PREFIX, "");
+        cardService.activateCard(userId, cardId,currentUserId, role);
         return ResponseEntity.noContent().build();
     }
 }

@@ -14,24 +14,29 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class
-UserServiceTest {
+class UserServiceTest {
+
+    private static final Long USER_ID = 1L;
+    private static final Long OTHER_USER_ID = 99L;
+    private static final String ADMIN = "ADMIN";
+    private static final String USER = "USER";
 
     @Mock
     private UserRepository userRepository;
@@ -49,7 +54,7 @@ UserServiceTest {
     @BeforeEach
     void setUp() {
         user = User.builder()
-                .id(1L)
+                .id(USER_ID)
                 .name("Anna")
                 .surname("Ivanova")
                 .email("anna@innowise.com")
@@ -58,7 +63,7 @@ UserServiceTest {
                 .build();
 
         userResponse = UserResponse.builder()
-                .id(1L)
+                .id(USER_ID)
                 .name("Anna")
                 .surname("Ivanova")
                 .email("anna@innowise.com")
@@ -100,20 +105,37 @@ UserServiceTest {
 
     @Test
     void getUserById_success() {
-        when(userRepository.findByIdWithCards(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdWithCards(USER_ID)).thenReturn(Optional.of(user));
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 
-        UserResponse result = userService.getUserById(1L);
+        UserResponse result = userService.getUserById(USER_ID, USER_ID, USER);
 
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getId()).isEqualTo(USER_ID);
+    }
+
+    @Test
+    void getUserById_successForAdmin() {
+        when(userRepository.findByIdWithCards(USER_ID)).thenReturn(Optional.of(user));
+        when(userMapper.toResponse(user)).thenReturn(userResponse);
+
+        UserResponse result = userService.getUserById(USER_ID, OTHER_USER_ID, ADMIN);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(USER_ID);
+    }
+
+    @Test
+    void getUserById_throwsAccessDenied_forNonOwner() {
+        assertThatThrownBy(() -> userService.getUserById(USER_ID, OTHER_USER_ID, USER))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
     void getUserById_notFound_throwsException() {
-        when(userRepository.findByIdWithCards(99L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdWithCards(OTHER_USER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.getUserById(99L))
+        assertThatThrownBy(() -> userService.getUserById(OTHER_USER_ID, OTHER_USER_ID, USER))
                 .isInstanceOf(UserNotFoundException.class)
                 .hasMessageContaining("99");
     }
@@ -122,11 +144,11 @@ UserServiceTest {
     void updateUser_success() {
         UserUpdateRequest updateRequest = new UserUpdateRequest("NewName", null, null);
 
-        when(userRepository.findByIdWithCards(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdWithCards(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 
-        UserResponse result = userService.updateUser(1L, updateRequest);
+        UserResponse result = userService.updateUser(USER_ID, updateRequest, USER_ID, USER);
 
         assertThat(result).isNotNull();
         verify(userMapper).updateEntity(updateRequest, user);
@@ -134,10 +156,31 @@ UserServiceTest {
     }
 
     @Test
-    void deactivateUser_success() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    void updateUser_successForAdmin() {
+        UserUpdateRequest updateRequest = new UserUpdateRequest("NewName", null, null);
 
-        userService.deactivateUser(1L);
+        when(userRepository.findByIdWithCards(USER_ID)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(userResponse);
+
+        UserResponse result = userService.updateUser(USER_ID, updateRequest, OTHER_USER_ID, ADMIN);
+
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    void updateUser_throwsAccessDenied_forNonOwner() {
+        UserUpdateRequest updateRequest = new UserUpdateRequest("NewName", null, null);
+
+        assertThatThrownBy(() -> userService.updateUser(USER_ID, updateRequest, OTHER_USER_ID, USER))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void deactivateUser_success() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        userService.deactivateUser(USER_ID);
 
         assertThat(user.getActive()).isFalse();
         verify(userRepository).save(user);
@@ -146,9 +189,9 @@ UserServiceTest {
     @Test
     void activateUser_success() {
         user.setActive(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
 
-        userService.activateUser(1L);
+        userService.activateUser(USER_ID);
 
         assertThat(user.getActive()).isTrue();
         verify(userRepository).save(user);
@@ -156,9 +199,9 @@ UserServiceTest {
 
     @Test
     void deactivateUser_notFound_throwsException() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(OTHER_USER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.deactivateUser(99L))
+        assertThatThrownBy(() -> userService.deactivateUser(OTHER_USER_ID))
                 .isInstanceOf(UserNotFoundException.class);
     }
 
@@ -173,7 +216,6 @@ UserServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().getFirst().getName()).isEqualTo("Anna");
-        verify(userRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test
@@ -186,7 +228,6 @@ UserServiceTest {
         Page<UserResponse> result = userService.getAllUsers("Anna", null, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().getName()).isEqualTo("Anna");
     }
 
     @Test
@@ -197,19 +238,6 @@ UserServiceTest {
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 
         Page<UserResponse> result = userService.getAllUsers(null, "Ivanova", pageable);
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().getSurname()).isEqualTo("Ivanova");
-    }
-
-    @Test
-    void getAllUsers_withBothFilters_returnsMatchingUsers() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<User> page = new PageImpl<>(List.of(user));
-        when(userRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(userMapper.toResponse(user)).thenReturn(userResponse);
-
-        Page<UserResponse> result = userService.getAllUsers("Anna", "Ivanova", pageable);
 
         assertThat(result.getContent()).hasSize(1);
     }

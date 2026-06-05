@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,8 +27,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserResponse> getUserById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next()
+                .getAuthority().replace("ROLE_", "");
+        return ResponseEntity.ok(userService.getUserById(id,currentUserId, role));
     }
 
     @GetMapping
@@ -42,8 +49,12 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateUser(id, request));
+            @Valid @RequestBody UserUpdateRequest request,
+            @AuthenticationPrincipal Long currentUserId,
+            Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next()
+                .getAuthority().replace("ROLE_", "");
+        return ResponseEntity.ok(userService.updateUser(id, request, currentUserId, role));
     }
 
     @PatchMapping("/{id}/deactivate")
