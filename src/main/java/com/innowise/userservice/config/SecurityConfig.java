@@ -11,11 +11,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@SuppressWarnings("java:S1075")
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ADMIN = "ADMIN";
+    private static final String USERS_PATH = "/api/v1/users";
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -25,9 +27,14 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/users").hasRole(ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ROLE_ADMIN")
-                        .requestMatchers("/users/*/status").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, USERS_PATH).hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.POST,USERS_PATH).hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.PUT, USERS_PATH+ "/*").hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, USERS_PATH+ "/*").hasRole(ADMIN)
+                        .requestMatchers(USERS_PATH + "/*/activate").hasRole(ADMIN)
+                        .requestMatchers(USERS_PATH+ "/*/deactivate").hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.GET, USERS_PATH + "/*").authenticated()
+                        .requestMatchers(USERS_PATH + "/*/cards/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
