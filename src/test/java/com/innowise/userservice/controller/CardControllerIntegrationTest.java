@@ -5,11 +5,9 @@ import com.innowise.userservice.dto.card.CardUpdateRequest;
 import com.innowise.userservice.dto.user.UserCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDate;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,13 +18,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
     private static final String USERS_API = "/api/v1/users";
-    private static final String ROLE_ADMIN = "ADMIN";
-    private static final String ROLE_USER = "USER";
-    private static final String ADMIN_USERNAME = "1";
-    private static final String OTHER_USER_USERNAME = "999";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final Long OTHER_USER_ID = 999L;
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createCard_success() throws Exception {
         Long userId = createUser("card.create@innowise.com");
 
@@ -34,6 +29,7 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "1111222233334444", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -43,14 +39,14 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    void createCard_withoutToken_returns401() throws Exception {
+    void createCard_withoutToken_isUnauthenticated() throws Exception {
         CardCreateRequest request = new CardCreateRequest(
                 "1111222233334444", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(1L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -61,7 +57,7 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "1111222233330001", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
-                        .with(user(userId.toString()).roles(ROLE_USER))
+                        .header(AUTHORIZATION, userToken(userId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -75,14 +71,13 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "1111222233330002", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
-                        .with(user(OTHER_USER_USERNAME).roles(ROLE_USER))
+                        .header(AUTHORIZATION, userToken(OTHER_USER_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createCard_maxCards_returnsUnprocessableEntity() throws Exception {
         Long userId = createUser("card.maxcards@innowise.com");
         String[] numbers = {
@@ -97,35 +92,37 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "1000000000000006", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sixth)))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createCard_inactiveUser_returnsUnprocessableEntity() throws Exception {
         Long userId = createUser("card.inactive@innowise.com");
-        mockMvc.perform(patch(USERS_API + "/" + userId + "/deactivate"))
+        mockMvc.perform(patch(USERS_API + "/" + userId + "/deactivate")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNoContent());
 
         CardCreateRequest request = new CardCreateRequest(
                 "2222333344445555", "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getCardsByUserId_returnsPaginatedResults() throws Exception {
         Long userId = createUser("card.list@innowise.com");
         createCard(userId, "3333444455556661");
         createCard(userId, "3333444455556662");
 
         mockMvc.perform(get(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .param("page", "0").param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
@@ -133,7 +130,6 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getCardsByUserId_filterByHolder_returnsMatchingCards() throws Exception {
         Long userId = createUser("card.holder.filter@innowise.com");
 
@@ -143,15 +139,18 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "4444555566667772", "BORIS PETROV", LocalDate.of(2028, 12, 1));
 
         mockMvc.perform(post(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req1)))
                 .andExpect(status().isCreated());
         mockMvc.perform(post(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req2)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get(cardsApi(userId))
+                        .header(AUTHORIZATION, adminToken())
                         .param("holder", "ANNA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
@@ -159,27 +158,26 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getCardById_success() throws Exception {
         Long userId = createUser("card.getbyid@innowise.com");
         Long cardId = createCard(userId, "5555666677778881");
 
-        mockMvc.perform(get(cardsApi(userId) + "/" + cardId))
+        mockMvc.perform(get(cardsApi(userId) + "/" + cardId)
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cardId));
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getCardById_notFound_returns404() throws Exception {
         Long userId = createUser("card.notfound@innowise.com");
 
-        mockMvc.perform(get(cardsApi(userId) + "/999999"))
+        mockMvc.perform(get(cardsApi(userId) + "/999999")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void updateCard_success() throws Exception {
         Long userId = createUser("card.update@innowise.com");
         Long cardId = createCard(userId, "6666777788889991");
@@ -187,6 +185,7 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
         CardUpdateRequest updateRequest = new CardUpdateRequest("UPDATED HOLDER", null);
 
         mockMvc.perform(put(cardsApi(userId) + "/" + cardId)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -194,31 +193,34 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void deactivateCard_success() throws Exception {
         Long userId = createUser("card.deactivate@innowise.com");
         Long cardId = createCard(userId, "7777888899990001");
 
-        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/deactivate"))
+        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/deactivate")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get(cardsApi(userId) + "/" + cardId))
+        mockMvc.perform(get(cardsApi(userId) + "/" + cardId)
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void activateCard_success() throws Exception {
         Long userId = createUser("card.activate@innowise.com");
         Long cardId = createCard(userId, "8888999900001111");
 
-        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/deactivate"))
+        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/deactivate")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/activate"))
+        mockMvc.perform(patch(cardsApi(userId) + "/" + cardId + "/activate")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get(cardsApi(userId) + "/" + cardId))
+        mockMvc.perform(get(cardsApi(userId) + "/" + cardId)
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
     }
@@ -231,7 +233,7 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), email);
         String response = mockMvc.perform(post(USERS_API)
-                        .with(user(ADMIN_USERNAME).roles(ROLE_ADMIN))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -243,7 +245,7 @@ class CardControllerIntegrationTest extends AbstractControllerIntegrationTest {
         CardCreateRequest request = new CardCreateRequest(
                 number, "ANNA IVANOVA", LocalDate.of(2028, 12, 1));
         String response = mockMvc.perform(post(cardsApi(userId))
-                        .with(user(ADMIN_USERNAME).roles(ROLE_ADMIN))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

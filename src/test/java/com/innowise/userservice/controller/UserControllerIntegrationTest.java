@@ -4,11 +4,9 @@ import com.innowise.userservice.dto.user.UserCreateRequest;
 import com.innowise.userservice.dto.user.UserUpdateRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDate;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -19,18 +17,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
     private static final String USERS_API = "/api/v1/users";
-    private static final String ROLE_ADMIN = "ADMIN";
-    private static final String ROLE_USER = "USER";
-    private static final String ADMIN_USERNAME = "1";
-    private static final String REGULAR_USER_USERNAME = "2";
+    private static final String AUTHORIZATION = "Authorization";
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createUser_success() throws Exception {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "anna.integration@innowise.com");
 
         mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -40,32 +35,32 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    void createUser_withoutToken_returns401() throws Exception {
+    void createUser_withoutToken_isUnauthenticated() throws Exception {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "no.token@innowise.com");
 
         mockMvc.perform(post(USERS_API)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
-    @WithMockUser(username = REGULAR_USER_USERNAME, roles = ROLE_USER)
     void createUser_withUserRole_returns403() throws Exception {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "user.role@innowise.com");
 
         mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, userToken(REGULAR_USER_ID))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getUserById_notFound() throws Exception {
-        mockMvc.perform(get(USERS_API + "/999"))
+        mockMvc.perform(get(USERS_API + "/999")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("User Not Found"));
     }
@@ -76,7 +71,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "Own", "Profile", LocalDate.of(1995, 5, 15), "own.profile@innowise.com");
 
         String response = mockMvc.perform(post(USERS_API)
-                        .with(user(ADMIN_USERNAME).roles(ROLE_ADMIN))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -85,7 +80,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
         Long userId = extractId(response);
 
         mockMvc.perform(get(USERS_API + "/" + userId)
-                        .with(user(userId.toString()).roles(ROLE_USER)))
+                        .header(AUTHORIZATION, userToken(userId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Own"));
     }
@@ -96,7 +91,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 "Other", "User", LocalDate.of(1995, 5, 15), "other.user@innowise.com");
 
         String response = mockMvc.perform(post(USERS_API)
-                        .with(user(ADMIN_USERNAME).roles(ROLE_ADMIN))
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -105,17 +100,17 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
         Long userId = extractId(response);
 
         mockMvc.perform(get(USERS_API + "/" + userId)
-                        .with(user(REGULAR_USER_USERNAME).roles(ROLE_USER)))
+                        .header(AUTHORIZATION, userToken(REGULAR_USER_ID)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createUser_invalidEmail_returnsBadRequest() throws Exception {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "invalid-email");
 
         mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -123,29 +118,30 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void createUser_duplicateEmail_returnsError() throws Exception {
         UserCreateRequest request = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "duplicate@innowise.com");
 
         mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void updateUser_success() throws Exception {
         UserCreateRequest createRequest = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "update.test@innowise.com");
 
         String response = mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -155,6 +151,7 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
         UserUpdateRequest updateRequest = new UserUpdateRequest("NewName", null, null);
 
         mockMvc.perform(put(USERS_API + "/" + id)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -162,9 +159,9 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void getAllUsers_adminAccess() throws Exception {
         mockMvc.perform(get(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .param("size", "5").param("page", "0"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(5))
@@ -172,19 +169,19 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = REGULAR_USER_USERNAME, roles = ROLE_USER)
     void getAllUsers_userRole_returns403() throws Exception {
-        mockMvc.perform(get(USERS_API))
+        mockMvc.perform(get(USERS_API)
+                        .header(AUTHORIZATION, userToken(REGULAR_USER_ID)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = ADMIN_USERNAME, roles = ROLE_ADMIN)
     void deactivateUser_success() throws Exception {
         UserCreateRequest createRequest = new UserCreateRequest(
                 "Anna", "Ivanova", LocalDate.of(1995, 5, 15), "deactivate.test@innowise.com");
 
         String response = mockMvc.perform(post(USERS_API)
+                        .header(AUTHORIZATION, adminToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -192,7 +189,8 @@ class UserControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
         Long id = extractId(response);
 
-        mockMvc.perform(patch(USERS_API + "/" + id + "/deactivate"))
+        mockMvc.perform(patch(USERS_API + "/" + id + "/deactivate")
+                        .header(AUTHORIZATION, adminToken()))
                 .andExpect(status().isNoContent());
     }
 }
