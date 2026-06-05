@@ -29,12 +29,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, USERS_PATH).hasRole(ADMIN)
                         .requestMatchers(HttpMethod.POST,USERS_PATH).hasRole(ADMIN)
-                        .requestMatchers(HttpMethod.PUT, USERS_PATH+ "/*").hasRole(ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, USERS_PATH+ "/*").hasRole(ADMIN)
-                        .requestMatchers(USERS_PATH + "/*/activate").hasRole(ADMIN)
-                        .requestMatchers(USERS_PATH+ "/*/deactivate").hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.PUT, USERS_PATH+ "/{id}").hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, USERS_PATH+ "/{id}").hasRole(ADMIN)
+                        .requestMatchers(USERS_PATH + "/{id}/activate").hasRole(ADMIN)
+                        .requestMatchers(USERS_PATH+ "/{id}/deactivate").hasRole(ADMIN)
                         .requestMatchers(HttpMethod.GET, USERS_PATH + "/*").authenticated()
-                        .requestMatchers(USERS_PATH + "/*/cards/**").authenticated()
+                        .requestMatchers(USERS_PATH + "/{id}/cards/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
