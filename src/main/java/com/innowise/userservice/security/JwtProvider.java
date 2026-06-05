@@ -1,6 +1,8 @@
 package com.innowise.userservice.security;
 
 import com.innowise.userservice.config.JwtConfig;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -15,26 +17,29 @@ public class JwtProvider {
 
     private final JwtConfig jwtConfig;
 
-    public void validateToken(String token) {
-        parser().parseSignedClaims(token);
+    public boolean validateToken(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (JwtException exception) {
+            return false;
+        }
     }
 
     public Long getUserIdFromToken(String token) {
-        return parser().parseSignedClaims(token)
-                .getPayload()
-                .get("userId", Long.class);
+        return Long.parseLong(parseClaims(token).getSubject());
     }
 
     public String getRoleFromToken(String token) {
-        return parser().parseSignedClaims(token)
-                .getPayload()
-                .get("role", String.class);
+        return parseClaims(token).get("role", String.class);
     }
 
-    private io.jsonwebtoken.JwtParser parser() {
+    private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
-                .build();
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private SecretKey getSigningKey() {
