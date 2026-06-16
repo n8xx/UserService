@@ -26,11 +26,16 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(userService.getUserById(id, authUser.getUserId(), authUser.getRole()));
+    }
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @GetMapping
