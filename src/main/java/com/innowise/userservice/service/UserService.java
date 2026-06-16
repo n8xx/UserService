@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,9 +51,16 @@ public class UserService {
     }
 
     @Cacheable(value = "users", key = "#id")
-    public UserResponse getUserById(Long id) {
+    public UserResponse getUserById(Long id,Long currentUserId, String role) {
+        checkAccess(id, currentUserId, role);
         User user = userRepository.findByIdWithCards(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+        return userMapper.toResponse(user);
+    }
+
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         return userMapper.toResponse(user);
     }
 
@@ -66,7 +74,8 @@ public class UserService {
 
     @CachePut(value = "users", key = "#id")
     @Transactional
-    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+    public UserResponse updateUser(Long id, UserUpdateRequest request,Long currentUserId, String role) {
+        checkAccess(id, currentUserId, role);
         log.info("Updating user with id: {}", id);
 
         User user = userRepository.findByIdWithCards(id)
@@ -96,5 +105,10 @@ public class UserService {
         User user = findUserOrThrow(id);
         user.setActive(true);
         userRepository.save(user);
+    }
+    private void checkAccess(Long userId, Long currentUserId, String role) {
+        if (!"ADMIN".equals(role) && !userId.equals(currentUserId)) {
+            throw new AccessDeniedException("Access denied");
+        }
     }
 }

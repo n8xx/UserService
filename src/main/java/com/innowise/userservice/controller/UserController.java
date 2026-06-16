@@ -3,6 +3,7 @@ package com.innowise.userservice.controller;
 import com.innowise.userservice.dto.user.UserCreateRequest;
 import com.innowise.userservice.dto.user.UserResponse;
 import com.innowise.userservice.dto.user.UserUpdateRequest;
+import com.innowise.userservice.security.AuthUser;
 import com.innowise.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,9 +26,16 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserResponse> getUserById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(userService.getUserById(id, authUser.getUserId(), authUser.getRole()));
+    }
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @GetMapping
@@ -42,8 +51,9 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateUser(id, request));
+            @Valid @RequestBody UserUpdateRequest request,
+            @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(userService.updateUser(id, request, authUser.getUserId(), authUser.getRole()));
     }
 
     @PatchMapping("/{id}/deactivate")

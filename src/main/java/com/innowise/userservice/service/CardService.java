@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,13 +36,14 @@ public class CardService {
 
     @Transactional
     @CacheEvict(value = "users", key = "#userId")
-    public CardResponse createCard(Long userId, CardCreateRequest request) {
+    public CardResponse createCard(Long userId, CardCreateRequest request,  Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         log.info("Creating card for user: {}", userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        if (!user.getActive()) {
+        if (Boolean.FALSE.equals(user.getActive())) {
             throw new BusinessException("Cannot add card to inactive user");
         }
 
@@ -58,11 +60,13 @@ public class CardService {
         return cardMapper.toResponse(saved);
     }
 
-    public CardResponse getCardById(Long id) {
+    public CardResponse getCardById(Long userId, Long id,Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         return cardMapper.toResponse(findCardOrThrow(id));
     }
 
-    public Page<CardResponse> getCardsByUserId(Long userId, String holder, Pageable pageable) {
+    public Page<CardResponse> getCardsByUserId(Long userId, String holder, Pageable pageable, Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         Specification<PaymentCard> spec = Specification
                 .where(CardSpecification.hasUserId(userId))
                 .and(CardSpecification.hasHolder(holder));
@@ -71,7 +75,8 @@ public class CardService {
 
     @CacheEvict(value = "users", key = "#userId")
     @Transactional
-    public CardResponse updateCard(Long userId, Long id, CardUpdateRequest request) {
+    public CardResponse updateCard(Long userId, Long id, CardUpdateRequest request, Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         log.info("Updating card with id: {}", id);
         PaymentCard card = findCardOrThrow(id);
         cardMapper.updateEntity(request, card);
@@ -80,7 +85,8 @@ public class CardService {
 
     @CacheEvict(value = "users", key = "#userId")
     @Transactional
-    public void deactivateCard(Long userId, Long id) {
+    public void deactivateCard(Long userId, Long id, Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         log.info("Deactivating card with id: {}", id);
         PaymentCard card = findCardOrThrow(id);
         card.setActive(false);
@@ -89,7 +95,8 @@ public class CardService {
 
     @CacheEvict(value = "users", key = "#userId")
     @Transactional
-    public void activateCard(Long userId, Long id) {
+    public void activateCard(Long userId, Long id, Long currentUserId, String role) {
+        checkAccess(userId, currentUserId, role);
         log.info("Activating card with id: {}", id);
         PaymentCard card = findCardOrThrow(id);
         card.setActive(true);
@@ -99,5 +106,10 @@ public class CardService {
     private PaymentCard findCardOrThrow(Long id) {
         return cardRepository.findById(id)
                 .orElseThrow(() -> new CardNotFoundException(id));
+    }
+    private void checkAccess(Long userId, Long currentUserId, String role) {
+        if (!"ADMIN".equals(role) && !userId.equals(currentUserId)) {
+            throw new AccessDeniedException("Access denied");
+        }
     }
 }
